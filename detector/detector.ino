@@ -3,9 +3,9 @@
 // Progressive 6-LED bar display shows interference level
 // Open Serial Monitor at 115200 baud for live readings
 //
-// v2 — thresholds calibrated from log-1.log data:
-//       jammer OFF: 0–5%, jammer ON: 5–10%
-//       dwell increased to 500µs, rolling average over 5 scans
+// v3 — thresholds rescaled to hardware ceiling (log-2.log, 1ft distance):
+//       jammer OFF: 0–3%, jammer ON: 6–10% avg, 13% peak
+//       full 6-LED range mapped to 2–12% for max visual impact
 
 #include <SPI.h>
 #include <RF24.h>
@@ -25,14 +25,15 @@
 #define LED_BLUE    33    // Level 5 — heavy
 #define LED_CLEAR    4    // Level 6 — maximum
 
-// ── Detection thresholds — calibrated from log-1.log ─────────────
-// Jammer OFF baseline: 0–4%   Jammer ON: 5–10%
-#define THRESH_1  0.02    //  2% — green (ambient noise floor)
-#define THRESH_2  0.04    //  4% — + yellow (rising above baseline)
-#define THRESH_3  0.06    //  6% — + orange (jammer reliably here)
-#define THRESH_4  0.10    // 10% — + red
-#define THRESH_5  0.20    // 20% — + blue  (closer range / stronger signal)
-#define THRESH_6  0.35    // 35% — all LEDs
+// ── Detection thresholds — calibrated from log-2.log ─────────────
+// Hardware ceiling at 1ft: ~13% raw, ~10% avg
+// Jammer OFF baseline: 0–3%    Jammer ON at 1ft: 6–10% avg, 13% peak
+#define THRESH_1  0.02    //  2% — green  (ambient noise floor)
+#define THRESH_2  0.04    //  4% — yellow (rising above baseline)
+#define THRESH_3  0.06    //  6% — orange (jamming reliably triggers here)
+#define THRESH_4  0.08    //  8% — red    (strong)
+#define THRESH_5  0.10    // 10% — blue   (heavy / close range)
+#define THRESH_6  0.12    // 12% — clear  (maximum — 1ft or less)
 
 // ── Config ───────────────────────────────────────────────────────
 #define NUM_CHANNELS      125
@@ -60,7 +61,7 @@ void setup() {
     digitalWrite(LED_PINS[i], LOW);
   }
 
-  Serial.println("\n=== NRF24L01 Interference Detector v2 ===");
+  Serial.println("\n=== NRF24L01 Interference Detector v3 ===");
   Serial.println("LED test...");
   for (int i = 0; i < 6; i++) { digitalWrite(LED_PINS[i], HIGH); delay(200); }
   delay(300);
